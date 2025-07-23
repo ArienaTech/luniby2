@@ -1,8 +1,19 @@
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+let openai: OpenAI | null = null
+
+function getOpenAI() {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required')
+    }
+    openai = new OpenAI({
+      apiKey,
+    })
+  }
+  return openai
+}
 
 export interface VetTriageContext {
   petName: string
@@ -35,7 +46,7 @@ Always maintain a caring, professional tone while being informative about potent
     }))
   ]
 
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: 'gpt-4',
     messages,
     max_tokens: 500,
@@ -66,7 +77,7 @@ Generate a professional SOAP note with:
 
 Return as JSON with keys: subjective, objective, assessment, plan, severity`
 
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: 'gpt-4',
     messages: [{ role: 'user', content: soapPrompt }],
     max_tokens: 600,
@@ -100,7 +111,7 @@ Criteria:
 - high: Serious condition requiring prompt veterinary attention  
 - urgent: Life-threatening, requires immediate emergency care`
 
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: 'gpt-4',
     messages: [{ role: 'user', content: severityPrompt }],
     max_tokens: 10,

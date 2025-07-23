@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { 
   Mic, 
@@ -29,7 +29,7 @@ interface ChatMessageWithId extends ChatMessage {
   isPlaying?: boolean
 }
 
-export default function TriagePage() {
+function TriagePageContent() {
   const searchParams = useSearchParams()
   const [isInitialized, setIsInitialized] = useState(false)
   const [session, setSession] = useState<TriageSession | null>(null)
@@ -211,7 +211,7 @@ export default function TriagePage() {
         role: 'user',
         content: inputText.trim() || '[Image uploaded]',
         timestamp: new Date().toISOString(),
-        image_url: imageUrl
+        image_url: imageUrl || undefined
       }
 
       const updatedMessages = [...messages, userMessage]
@@ -615,5 +615,13 @@ export default function TriagePage() {
         isGuest={!currentUser}
       />
     </div>
+  )
+}
+
+export default function TriagePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <TriagePageContent />
+    </Suspense>
   )
 }

@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-})
+let stripe: Stripe | null = null
+
+function getStripe() {
+  if (!stripe) {
+    const secretKey = process.env.STRIPE_SECRET_KEY
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is required')
+    }
+    stripe = new Stripe(secretKey, {
+      apiVersion: '2023-10-16',
+    })
+  }
+  return stripe
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +48,7 @@ export async function POST(request: NextRequest) {
       sessionParams.mode = 'subscription'
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams)
+    const session = await getStripe().checkout.sessions.create(sessionParams)
 
     return NextResponse.json({ sessionId: session.id })
   } catch (error) {
